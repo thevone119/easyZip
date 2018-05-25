@@ -39,20 +39,19 @@ func MarkFileTo(filePath string, targetPath string, isDelSrc bool) {
 	fr, _ := os.Open(filePath)
 	defer fr.Close()
 	//输出文件
-	p, n := getPathAndFile(filePath)
+	p, _ := getPathAndFile(filePath)
 	if targetPath == "" {
 		targetPath = p
 	}
 	//文件名加上父路径
-	var parentPath = getParentDirectory(filePath)
-	var outpath = targetPath + "/m_" + parentPath + "_" + n
+	//var parentPath = getParentDirectory(filePath)
 
 	//1.初始化,判断读取的文件，如果读取的文件是zip文件，则直接返回
 	zipm.ReLoadByFile(fr, false)
 	if zipm.IsZip {
 		return
 	}
-
+	var outpath = targetPath + "/" + zipm.Smd532 + ".dmp"
 	//2.判断输出的文件，如果输出的文件已经存在，并且长度和md5都一致，则不处理
 	outzipm := ZipModel{}
 	outzipm.init()
@@ -151,6 +150,7 @@ func UnMarkFile(filePath string, isDelSrc bool) (string, error) {
 	}
 
 	//输出文件
+	fmt.Println("正在解密文件:" + filePath)
 	fw, err := os.Create(getUPath(filePath))
 	defer fw.Close()
 	fr.Seek(int64(zipm.Hreadlen), os.SEEK_SET)
@@ -276,7 +276,7 @@ func MarkFilePath(srcPath, toPath string, maxMark int, isDelSrc bool) {
 
 		//只处理视频类文件
 		var Upperfn = strings.ToUpper(f)
-		movietype := []string{".MP4", ".AVI", ".MKV", ".WMV", ".RMVB", ".FLV"}
+		movietype := []string{".MP4", ".AVI", ".MKV", ".WMV", ".RMVB", ".FLV", ".RM"}
 		var ismovie = false
 		for _, mot := range movietype {
 			if strings.Index(Upperfn, mot) > 0 {
@@ -288,8 +288,8 @@ func MarkFilePath(srcPath, toPath string, maxMark int, isDelSrc bool) {
 		}
 
 		//只处理特殊的文件
-		if strings.Index(Upperfn, "[FHD-1080P]") < 0 {
-			continue
+		if strings.Index(Upperfn, "SMD第三期") < 0 {
+			//continue
 		}
 
 		fmt.Println(strconv.Itoa(i) + ":" + strconv.Itoa(count) + ":" + f)
@@ -300,5 +300,27 @@ func MarkFilePath(srcPath, toPath string, maxMark int, isDelSrc bool) {
 		}
 
 		count = count + 1
+	}
+}
+
+//对文件进行批量解压处理
+func UnMarkFilePath(srcPath string, maxMark int, isDelSrc bool) {
+	files, _ := WalkDir(srcPath, "", 0)
+	var count = 0
+	for _, f := range files {
+		//只处理视频类文件
+		var Upperfn = strings.ToUpper(f)
+		movietype := []string{".MP4", ".AVI", ".MKV", ".WMV", ".RMVB", ".FLV", ".RM"}
+		var ismovie = false
+		for _, mot := range movietype {
+			if strings.Index(Upperfn, mot) > 0 {
+				ismovie = true
+			}
+		}
+		if !ismovie {
+			continue
+		}
+		UnMarkFile(f, isDelSrc)
+		count++
 	}
 }

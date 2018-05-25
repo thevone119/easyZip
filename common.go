@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -159,4 +162,33 @@ func WalkDir(dirPth, suffix string, minlen int64) (files []string, err error) {
 	})
 
 	return files, err
+}
+
+// 获取本机的MAC地址
+func getMac() string {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		panic("Error : " + err.Error())
+	}
+	for _, inter := range interfaces {
+		mac := inter.HardwareAddr //获取本机MAC地址
+		fmt.Println("MAC = ", mac)
+		return mac.String()
+	}
+	return ""
+}
+
+// 简单直接的GET请求
+func httpGet(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
